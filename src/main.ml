@@ -1,9 +1,10 @@
 (* Fun experiments without meaning *)
 
 module Config = struct
-  let width = 512
-  let height = 512
+  let width = 256
+  let height = 256
   let diff = 1.0
+  let visc = 1.0
 end;;
 
 module Data = Grid.DataGrid(Config);;
