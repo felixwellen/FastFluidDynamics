@@ -1,0 +1,7 @@
+S src
+
+PKG core
+PKG lablgl
+PKG lablgl.glut
+
+B _build/**

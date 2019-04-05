@@ -1,0 +1,4 @@
+<src/**>: include
+<src/**>: package(lablgl.glut)
+<src/**>: package(core)
+<src/**>: thread
