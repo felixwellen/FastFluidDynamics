@@ -21,3 +21,9 @@ and then
 
 opam install lablgl
 opam install core
+
+then
+
+make
+
+should build a 'main' executable.

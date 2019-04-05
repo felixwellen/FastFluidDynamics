@@ -1,8 +1,8 @@
 (* Fun experiments without meaning *)
 
 module Config = struct
-  let width = 256
-  let height = 64
+  let width = 512
+  let height = 512
   let diff = 0.00001
 end;;
 
@@ -13,7 +13,7 @@ let make_image () =
     GlPix.create `ubyte ~format:`rgb ~width:Config.width ~height:Config.height in
   for i = 0 to Config.width - 1 do
     for j = 0 to Config.height - 1 do
-      Raw.sets (GlPix.to_raw image) ~pos:(3*(i*Config.height+j)) (Data.color i j) 
+      Raw.sets (GlPix.to_raw image) ~pos:(3*(j*Config.width+i)) (Data.color i j) 
     done
   done;
   image
