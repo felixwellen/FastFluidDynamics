@@ -3,7 +3,7 @@ It is supposed to implement a fast and unprecise Navier-Stokes solver from the p
 
 http://www.dgp.toronto.edu/people/stam/reality/Research/pdf/GDC03.pdf
 
-So far, only diffusion is implemented and there is a bug to be found...
+So far, only a dynamic density field and a constant velocity field are implemented.
 I learned how to use opengl through lablgl from the examples here:
 
 https://github.com/youjinbou/lablgl/tree/master/LablGlut/examples/lablGL
