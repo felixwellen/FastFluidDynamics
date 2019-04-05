@@ -3,11 +3,11 @@
 module Config = struct
   let width = 512
   let height = 512
-  let diff = 0.00001
+  let diff = 1.0
 end;;
 
 module Data = Grid.DataGrid(Config);;
-   
+
 let make_image () =
   let image =
     GlPix.create `ubyte ~format:`rgb ~width:Config.width ~height:Config.height in
@@ -45,7 +45,7 @@ let display () =
   Gl.flush ()
 
 let move_forward_in_time () =
-  Data.perform_time_step_good 1.0;
+  Data.perform_time_step 0.001;
   myinit ();
   display ()
 
