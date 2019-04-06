@@ -14,7 +14,7 @@ let make_image () =
     GlPix.create `ubyte ~format:`rgb ~width:Config.width ~height:Config.height in
   for i = 0 to Config.width - 1 do
     for j = 0 to Config.height - 1 do
-      Raw.sets (GlPix.to_raw image) ~pos:(3*(j*Config.width+i)) (Data.color i j) 
+      Raw.sets (GlPix.to_raw image) ~pos:(3*(j*Config.width+i)) (Data.color_density i j) 
     done
   done;
   image
@@ -46,7 +46,7 @@ let display () =
   Gl.flush ()
 
 let move_forward_in_time () =
-  Data.perform_time_step 0.001;
+  Data.perform_time_step 0.01;
   myinit ();
   display ()
 
