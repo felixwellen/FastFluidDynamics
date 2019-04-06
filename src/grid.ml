@@ -56,50 +56,48 @@ module DataGrid =
     let cap d = max 0.0 (min d 1.0) 
                        
     let density =
-      let value i j = if (i < 10 || i > C.width - 10)
+      (* let random i j = if (i < 10 || i > C.width - 10)
                          || (j < 10 || j > C.height - 10)
                       then (Random.float 1.0) else 0.0
-      in make_new_array value
+      in*)
+      let zero i j = 0.0 in
+      make_new_array zero
 
+    let user_interaction = FluidState.setting
+                         
     let buffer = make_new_array (fun i j -> 0.0)
 
     let null_buffer () = write_to_array (fun i j -> 0.0) buffer
 
     let velocity_x = make_new_array (fun i j ->
                          let ty = (float j /. float C.height) -. 0.5 in
-                         (0.25 -. ty *. ty)
+                         0.0 *. (0.25 -. ty *. ty)
                        )
     let velocity_y = make_new_array (fun i j ->
                          let tx = float i /. float C.width in
-                         let ty = float j /. float C.height in
-                         (0.25 -. tx *. tx) 
+                         (* let ty = float j /. float C.height in *)
+                         0.0 *. (0.25 -. tx *. tx) 
                        )
-
-    let force_x i j =
-      let tx = float i /. float C.width in
-      (* let ty = float j /. float C.height in *)
-      0.01 *. (1.0 -. tx) *. (1.0 -. tx) *. (1.0 -. tx) 
-      
-    let force_y i j =
-      (*      let tx = float i /. float C.width in *)
-      let ty = float j /. float C.height in 
-      0.01 *. (1.0 -. ty) *. (1.0 -. ty) *. (1.0 -. ty) 
-
 
     let den i j = density.(to_index i j)
     let buf i j = buffer.(to_index i j)
     let vel_x i j = velocity_x.(to_index i j)
     let vel_y i j = velocity_y.(to_index i j)
-                  
+
     let color_density i j =
       let d = int_of_float (255.0 *. den i j) in
       [|d;d;d|]
 
     let color_velocity i j =
-      let dx = int_of_float (128.0 *. vel_x i j +. 128.0) in
-      let dy = int_of_float (128.0 *. vel_y i j +. 128.0) in
+      let dx = int_of_float (16.0 *. vel_x i j +. 128.0) in
+      let dy = int_of_float (16.0 *. vel_y i j +. 128.0) in
       [|dx;dy;0|]
       
+    let color i j =
+      if user_interaction#visibility_vector_field
+      then color_velocity i j
+      else color_density i j
+                  
     let cap_x v = min (max 0.5 v) (float C.width -. 2.5)
     let cap_y v = min (max 0.5 v) (float C.height -. 2.5)
       
@@ -122,12 +120,12 @@ module DataGrid =
         0.5 *. (src (C.width-2) (C.height-1) +. src (C.width-1) (C.height-2));
       target.(to_index 0 (C.height-1)) <- 0.5 *. (src 1 (C.height-1) +. src 0 (C.height-2))
       
-    let advect_to_buffer dt src force_x force_y b =
+    let advect_to_buffer dt src speed_x speed_y b =
       let dt0 = dt*.float C.width in
       let update_function i j =
         if not (boundary i j)
-        then let x = cap_x (float i -. dt0 *. force_x i j) in
-             let y = cap_y (float j -. dt0 *. force_y i j) in
+        then let x = cap_x (float i -. dt0 *. speed_x i j) in
+             let y = cap_y (float j -. dt0 *. speed_y i j) in
              let i0 = int_of_float x in
              let i1 = i0+1 in
              let j0 = int_of_float y in
@@ -154,7 +152,7 @@ module DataGrid =
                      +. src i (j-1)
                      +. src i (j+1)))
              /. (1.0 +. 4.0 *. a)
-        else src i j
+        else 0.0
       in
       do_times 20
         (write_to_array update buffer; set_boundary buffer src b)
@@ -188,7 +186,24 @@ module DataGrid =
       in write_to_array result_y velocity_y;
          set_boundary velocity_x vel_x 1;
          set_boundary velocity_y vel_y 2
+         
+    let distance x y = max (x - y) (y - x)
+         
+    let density_source i j =
+      if (distance i (C.width/5) < 10 && distance j (C.height/2) < 10)
+      then 0.04
+      else 0.0
 
+    let speed_source_x i j =
+      if (i < C.width/4 && j > C.height/3) then 0.1
+      else if (i > C.width - C.width/4 && j < C.height/2) then -0.1 else 0.0
+      
+    let speed_source_y i j =
+      if (i < C.width/5 && j > C.height/2) then 0.0 else 0.0 
+      
+    let add_source target src cap =
+      write_to_array (fun i j -> min (target.(to_index i j) +. src i j) cap) target
+         
     let advect dt target src force_x force_y b =
       advect_to_buffer dt src force_x force_y b;
       copy_to buffer target
@@ -198,16 +213,22 @@ module DataGrid =
       copy_to buffer target
       
     let adjust_velocity_field dt =
+      add_source velocity_x speed_source_x 10.0;
+      add_source velocity_y speed_source_y 10.0;
       diffuse dt C.visc vel_x velocity_x 1;
       diffuse dt C.visc vel_y velocity_y 2;
       project dt;
-      advect dt velocity_x vel_x force_x force_y 1;
-      advect dt velocity_y vel_y force_x force_y 2;
+      advect dt velocity_x vel_x vel_x vel_y 1;
+      advect dt velocity_y vel_y vel_x vel_y 2;
       project dt
+
+    let adjust_density dt =
+      add_source density density_source 1.0;
+      diffuse dt C.diff den density 0;
+      advect dt density den vel_x vel_y 0
       
     let perform_time_step dt =
       adjust_velocity_field dt;
-      diffuse dt C.diff den density 0;
-      advect dt density den vel_x vel_y 0
+      adjust_density dt
       
   end;;

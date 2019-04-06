@@ -4,7 +4,7 @@ module Config = struct
   let width = 256
   let height = 256
   let diff = 1.0
-  let visc = 1.0
+  let visc = 0.1
 end;;
 
 module Data = Grid.DataGrid(Config);;
@@ -14,7 +14,7 @@ let make_image () =
     GlPix.create `ubyte ~format:`rgb ~width:Config.width ~height:Config.height in
   for i = 0 to Config.width - 1 do
     for j = 0 to Config.height - 1 do
-      Raw.sets (GlPix.to_raw image) ~pos:(3*(j*Config.width+i)) (Data.color_density i j) 
+      Raw.sets (GlPix.to_raw image) ~pos:(3*(j*Config.width+i)) (Data.color i j) 
     done
   done;
   image
@@ -63,8 +63,24 @@ let main () =
   ignore(Glut.init Sys.argv);
   Glut.initDisplayMode ~alpha:true ~depth:true () ;
   Glut.initWindowSize ~w:800 ~h:800 ;
-  ignore(Glut.createWindow ~title:"checker");
+  ignore(Glut.createWindow ~title:"stokes");
   myinit ();
+  let _keyboard_callback ~key ~x ~y = 
+    match (char_of_int key) with
+    | 'q' -> exit 0;
+    | 'v' -> Data.user_interaction#switch_vector_field_visibility;
+    | _ -> () 
+  in
+  let _special_key_callback ~key ~x ~y =
+    let redisp = ref true in 
+    match key with 
+    | Glut.KEY_LEFT  -> Data.user_interaction#switch_vector_field_visibility;
+    | _ -> begin 
+        redisp := false; 
+        (); 
+      end;
+           if !redisp then Glut.postRedisplay ();
+  in Glut.keyboardFunc ~cb:_keyboard_callback;
   Glut.displayFunc ~cb:display;
   Glut.reshapeFunc ~cb:reshape;
   Glut.idleFunc ~cb:(Some move_forward_in_time);
