@@ -1,5 +1,12 @@
-The main purpose of this project is to learn ocaml.
-It is supposed to implement a fast and unprecise Navier-Stokes solver from the paper
+CONTROLS:
+
+q          -- quit
+v          -- show the velocity vector field
+left click -- drop some smoke into the fluid
+
+Something seems still to be off: the velocities don't interact intuitively with each other.
+The goal is, that I learn more ocaml.
+The program is supposed to implement a fast and unprecise Navier-Stokes solver from the paper
 
 http://www.dgp.toronto.edu/people/stam/reality/Research/pdf/GDC03.pdf
 
@@ -7,6 +14,10 @@ So far, only a dynamic density field and a constant velocity field are implement
 I learned how to use opengl through lablgl from the examples here:
 
 https://github.com/youjinbou/lablgl/tree/master/LablGlut/examples/lablGL
+
+and got some hints from (the outdated examples) here
+
+http://www.linux-nantes.org/~fmonnier/OCaml/GL/ocaml-opengl-howto.en.html
 
 I am working with fedora 29. In addition to installing basic ocaml stuff, I did:
 
