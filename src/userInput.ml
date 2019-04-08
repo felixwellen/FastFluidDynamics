@@ -31,7 +31,6 @@ let setting = object
       | (x , y) -> left_mouse_clicks <- (x , y) :: left_mouse_clicks
 
     method right_mouse_click (x,y) =
-      Printf.printf "%d %d \n%!" x y;
       match fan_state with
       | Nothing_happening ->
          fan_state <- Arrow_starting_at (x,y);

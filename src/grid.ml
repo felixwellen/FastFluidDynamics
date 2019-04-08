@@ -48,7 +48,7 @@ module DataGrid =
         )
         arr2
 
-    let rec do_times k f = if (k > 0) then (f; do_times (k-1) f) else ()
+    let rec do_times k f = if (k > 0) then (f (); do_times (k-1) f) else ()
                          
     let boundary i j = (i == 0) || (i >= C.width-1)
                        || (j == 0) || (j == C.height-1)
@@ -98,14 +98,15 @@ module DataGrid =
       (vel_x i j , vel_y i j)
 
     let div i j =
-        if boundary i j
-        then 0.0
-        else -0.5 *. (vel_x (i+1) j -. vel_x (i-1) j +.
-                      vel_y i (j+1) -. vel_y i (j-1))
+      let h = 1.0 /. float(C.width) in
+      if boundary i j
+      then 0.0
+      else -0.5 *. h *. (vel_x (i+1) j -. vel_x (i-1) j +.
+                           vel_y i (j+1) -. vel_y i (j-1))
 
     let color_with_div i j =
-      let div_pos = max 0 (int_of_float (512.0 *. div i j)) in
-      let div_neg = max 0 (int_of_float (-512.0 *. div i j)) in
+      let div_pos = max 0 (int_of_float (51200.0 *. div i j)) in
+      let div_neg = max 0 (int_of_float (-51200.0 *. div i j)) in
       let d = int_of_float (255.0 *. den i j) in
       [|min 255 (d+div_pos);min 255 (d+div_neg);d|]
       
@@ -166,11 +167,10 @@ module DataGrid =
         else 0.0
       in
       do_times 20
-        (write_to_array update buffer; set_boundary buffer src b)
+        (fun () -> write_to_array update buffer; set_boundary buffer src b)
       
     let project dt =
-      null_buffer (); 
-      (* write_to_array div buffer; *)
+      write_to_array div buffer; 
       let h = 1.0 /. float(C.width) in
       let p = buf in
       let update i j =
@@ -217,7 +217,6 @@ module DataGrid =
         1.0
       in
       let fan_action ((x,y),(dx,dy)) =
-        Printf.printf "%d %d %d %d \n%!" x y dx dy;
         let dx, dy = float(dx), float(dy) in
         velocity_x.(to_index x y) <- vel_x x y +. dx;
         velocity_y.(to_index x y) <- vel_y x y +. dy

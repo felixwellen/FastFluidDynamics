@@ -1,8 +1,8 @@
 (* Fun experiments without meaning *)
 
 module Config = struct
-  let width = 256
-  let height = 256
+  let width = 128
+  let height = 128
   let diff = 1.0
   let visc = 100.0
 end;;
@@ -75,11 +75,11 @@ let draw_arrow x y dx dy c thickness eps =
       [ Math.add2d s u ; Math.add2d s v ; Math.add2d s w ];
     GlDraw.ends ()
 
-let  draw_capped_arrow x y dx dy cap =
+let draw_capped_arrow x y dx dy cap =
   let l = 2.0 *. Math.length2d (dx , dy) in
   let (dx , dy) = if l > cap then (cap /. l *. dx , cap /. l *. dy) else (dx , dy) in
   let c = (0.5 *. l /. cap , max 0.1 (1.0 -. l /. cap) , max 0.1 (1.0 -. l /. cap)) in
-  draw_arrow x y dx dy c 0.01 0.0001
+  draw_arrow x y dx dy c 0.01 0.004
   
 let draw_velocity_field () =
   Gl.disable `texture_2d;
