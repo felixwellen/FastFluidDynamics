@@ -198,22 +198,32 @@ module DataGrid =
     let density_source i j = 0.0
 
     let add_source target src cap =
-      write_to_array (fun i j -> min (target.(to_index i j) +. src i j) cap) target
+      write_to_array (fun i j ->
+          match cap with
+          | None -> target.(to_index i j) +. src i j
+          | Some limit -> min (target.(to_index i j) +. src i j) limit) target
 
+    (* inefficient *)
+    let add_on_disc arr x y radius f cap = 
+        add_source arr
+          (fun i j ->
+            let r = Math.distance2d (float i , float j) (float x , float y) in
+            if r < radius
+            then f x y r
+            else 0.0)
+          cap
+      
     let handle_user_input () =
       let add_density_blob x y =
         let radius = 0.05 *. float (C.width) in
-        add_source density
-          (fun i j ->
-            if (Math.distance2d (float i , float j) (float x , float y) < radius)
-            then 1.0
-            else 0.0)
-        1.0
+        add_on_disc density x y radius (fun i j r -> 1.0) (Some 1.0)
       in
       let fan_action ((x,y),(dx,dy)) =
-        let dx, dy = float(dx), float(dy) in
-        velocity_x.(to_index x y) <- vel_x x y +. dx;
-        velocity_y.(to_index x y) <- vel_y x y +. dy
+        let radius = 5.0 in
+        let scale_down = 1.0 /. (3.0 *. radius *. radius) in
+        let (dx, dy) = Math.scale2d scale_down (float(dx), float(dy)) in
+        add_on_disc velocity_x x y radius (fun i j r -> dx) None;
+        add_on_disc velocity_y x y radius (fun i j r -> dy) None
       in
       input#handle_left_mouse_clicks
         (fun p -> match p with
@@ -237,7 +247,7 @@ module DataGrid =
       project dt 
 
     let adjust_density dt =
-      add_source density density_source 1.0;
+      add_source density density_source (Some 1.0);
       diffuse dt C.diff den density 0;
       advect dt density den 0
       

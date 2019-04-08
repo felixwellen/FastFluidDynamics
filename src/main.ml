@@ -29,8 +29,7 @@ let make_image () =
   done;
   image
 
-let myinit () =
-  GlClear.color (0.0, 0.0, 0.0);
+let update_texture () =
   Gl.enable `depth_test;
   GlFunc.depth_func `less;
   let image = make_image () in
@@ -100,6 +99,7 @@ let possibly_draw_fan_arrow () = ()
      draw_capped_arrow x y dx dy 0.1
                                     *)     
 let display () =
+  GlClear.color (0.0, 0.0, 0.0);
   GlClear.clear [`color;`depth];
   Gl.enable `texture_2d;
   GlDraw.begins `quads;
@@ -116,7 +116,7 @@ let display () =
 let move_forward_in_time () =
   if Data.input#run_simulation then
     Data.perform_time_step dt;
-  myinit ();
+  update_texture ();
   display ()
 
 let reshape ~w ~h =
@@ -156,7 +156,7 @@ let main () =
   Glut.initDisplayMode ~alpha:true ~depth:true () ;
   Glut.initWindowSize ~w:windowWidth ~h:windowHeight ;
   ignore(Glut.createWindow ~title:"stokes");
-  myinit ();
+  update_texture ();
   Glut.mouseFunc ~cb:mouse;
   Glut.motionFunc ~cb:mouse_motion;
   Glut.keyboardFunc ~cb:_keyboard_callback;
