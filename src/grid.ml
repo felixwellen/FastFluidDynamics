@@ -67,14 +67,17 @@ module DataGrid =
 
     let null_buffer () = write_to_array (fun i j -> 0.0) buffer
 
-    let velocity_x = make_new_array (fun i j ->
-                         let ty = (float j /. float C.height) -. 0.5 in
-                         0.0 *. (0.25 -. ty *. ty)
+    let velocity_x = make_new_array (fun i j -> 0.0
+                         (*let tx = float i /. float C.width  in
+                         let ty = (float j /. float C.height)  in
+                         *. ((0.25 -. tx) *. (0.75 -. ty) +. (0.25 -. ty) *. (0.75 -. tx)) *)
+                       (* -8.0 *. (tx -. 0.5) *. (ty -. 0.5) *)
                        )
-    let velocity_y = make_new_array (fun i j ->
-                         let tx = float i /. float C.width in
-                         (* let ty = float j /. float C.height in *)
-                         0.0 *. (0.25 -. tx *. tx) 
+    let velocity_y = make_new_array (fun i j -> 0.0
+                        (* let tx = float i /. float C.width   in
+                         let ty = (float j /. float C.height)  in
+                          *. ((tx -. 0.25) *. (tx -. 0.75) -. (ty -. 0.25) *. (ty -. 0.75)) *)
+                       (* 4.0 *. (tx *. tx -. ty *. ty -. tx +. ty) *)
                        )
 
     let den i j = density.(to_index i j)
@@ -93,9 +96,21 @@ module DataGrid =
       let i = int_of_float ((x +. 1.0) *. 0.5 *. float C.width) in
       let j = int_of_float ((y +. 1.0) *. 0.5 *. float C.height) in
       (vel_x i j , vel_y i j)
+
+    let div i j =
+        if boundary i j
+        then 0.0
+        else -0.5 *. (vel_x (i+1) j -. vel_x (i-1) j +.
+                      vel_y i (j+1) -. vel_y i (j-1))
+
+    let color_with_div i j =
+      let div_pos = max 0 (int_of_float (512.0 *. div i j)) in
+      let div_neg = max 0 (int_of_float (-512.0 *. div i j)) in
+      let d = int_of_float (255.0 *. den i j) in
+      [|min 255 (d+div_pos);min 255 (d+div_neg);d|]
       
-    let cap_x v = min (max 0.5 v) (float C.width -. 2.5)
-    let cap_y v = min (max 0.5 v) (float C.height -. 2.5)
+    let cap_x v = min (max 0.5 v) (float C.width -. 1.5)
+    let cap_y v = min (max 0.5 v) (float C.height -. 1.5)
       
     let set_boundary target src b = 
       for i = 1 to C.width - 2 do
@@ -116,12 +131,12 @@ module DataGrid =
         0.5 *. (src (C.width-2) (C.height-1) +. src (C.width-1) (C.height-2));
       target.(to_index 0 (C.height-1)) <- 0.5 *. (src 1 (C.height-1) +. src 0 (C.height-2))
       
-    let advect_to_buffer dt src speed_x speed_y b =
+    let advect_to_buffer dt src b =
       let dt0 = dt*.float C.width in
       let update_function i j =
         if not (boundary i j)
-        then let x = cap_x (float i -. dt0 *. speed_x i j) in
-             let y = cap_y (float j -. dt0 *. speed_y i j) in
+        then let x = cap_x (float i -. dt0 *. vel_x i j) in
+             let y = cap_y (float j -. dt0 *. vel_y i j) in
              let i0 = int_of_float x in
              let i1 = i0+1 in
              let j0 = int_of_float y in
@@ -154,14 +169,9 @@ module DataGrid =
         (write_to_array update buffer; set_boundary buffer src b)
       
     let project dt =
-      null_buffer ();
+      null_buffer (); 
+      (* write_to_array div buffer; *)
       let h = 1.0 /. float(C.width) in
-      let div i j =
-        if boundary i j
-        then 0.0
-        else -0.5 *. (vel_x (i+1) j -. vel_x (i-1) j +.
-                      vel_y i (j+1) -. vel_y i (j-1))
-      in
       let p = buf in
       let update i j =
         if boundary i j
@@ -193,13 +203,6 @@ module DataGrid =
      *)
     let density_source i j = 0.0
 
-    let speed_source_x i j =
-      if (i < C.width/4 && j > C.height/3) then 0.1
-      else if (i > C.width - C.width/4 && j < C.height/2) then -0.1 else 0.0
-      
-    let speed_source_y i j =
-      if (i < C.width/5 && j > C.height/2) then -0.05 else 0.0 
-      
     let add_source target src cap =
       write_to_array (fun i j -> min (target.(to_index i j) +. src i j) cap) target
 
@@ -208,37 +211,42 @@ module DataGrid =
         let radius = 0.05 *. float (C.width) in
         add_source density
           (fun i j ->
-            if (sqrt ((float i -. float x) *. (float i -. float x)
-                      +. (float j -. float y) *. (float j -. float y)) < radius)
+            if (Math.distance2d (float i , float j) (float x , float y) < radius)
             then 1.0
             else 0.0)
         1.0
       in
-      input#handle_left_mouse_clicks (fun p -> match p with
-                                               | (x , y) -> add_density_blob x y)
+      let fan_action ((x,y),(dx,dy)) =
+        Printf.printf "%d %d %d %d \n%!" x y dx dy;
+        let dx, dy = float(dx), float(dy) in
+        velocity_x.(to_index x y) <- vel_x x y +. dx;
+        velocity_y.(to_index x y) <- vel_y x y +. dy
+      in
+      input#handle_left_mouse_clicks
+        (fun p -> match p with
+                  | (x , y) -> add_density_blob x y);
+      input#apply_to_user_fans fan_action
       
-    let advect dt target src force_x force_y b =
-      advect_to_buffer dt src force_x force_y b;
+    let advect dt target src b =
+      advect_to_buffer dt src b;
       copy_to buffer target
 
     let diffuse dt flow src target b =
       diffuse_in_buffer dt flow src b;
       copy_to buffer target
       
-    let adjust_velocity_field dt =
-      add_source velocity_x speed_source_x 10.0;
-      add_source velocity_y speed_source_y 10.0;
+    let adjust_velocity_field dt = 
       diffuse dt C.visc vel_x velocity_x 1;
       diffuse dt C.visc vel_y velocity_y 2;
-      project dt;
-      advect dt velocity_x vel_x vel_x vel_y 1;
-      advect dt velocity_y vel_y vel_x vel_y 2;
-      project dt
+      project dt; 
+      advect dt velocity_x vel_x 1; 
+      advect dt velocity_y vel_y 2;
+      project dt 
 
     let adjust_density dt =
       add_source density density_source 1.0;
       diffuse dt C.diff den density 0;
-      advect dt density den vel_x vel_y 0
+      advect dt density den 0
       
     let perform_time_step dt =
       handle_user_input ();
