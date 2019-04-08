@@ -1,11 +1,10 @@
 CONTROLS:
 
-q          -- quit
-v          -- show the velocity vector field
-s          -- start/stop simulation
-d          -- show divergence of velocity field
-	      (red means positive, green negative)
-left click -- drop something into the fluid
+- q          -- quit.
+- v          -- show the velocity vector field.
+- s          -- start/stop simulation.
+- d          -- show divergence of velocity field.(red means positive, green negative)
+- left click -- drop something into the fluid.
 
 Something seems still to be off: the velocities don't interact intuitively with each other.
 The goal is, that I learn more ocaml.
