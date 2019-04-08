@@ -195,12 +195,6 @@ module DataGrid =
          
     let distance x y = max (x - y) (y - x)
 
-    (* static density sources may be added here 
-       e.g.:
-      if (distance i (C.width/5) < 10 && distance j (C.height/2) < 10)
-      then 0.04
-      else 0.0
-     *)
     let density_source i j = 0.0
 
     let add_source target src cap =

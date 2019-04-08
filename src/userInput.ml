@@ -12,6 +12,7 @@ let setting = object
     val mutable fan_state = Nothing_happening;
     val mutable forces_to_add : ((int * int) * (int * int)) list = [];
     val mutable last_mouse_pos = (0,0);
+    val mutable window_size = (0,0);
                                                                    
     method pause_unpause = run_simulation_switch <- not run_simulation_switch
     method switch_vector_field_visibility = vector_field_switch <- not vector_field_switch
@@ -21,8 +22,14 @@ let setting = object
     method run_simulation = run_simulation_switch
     method show_div = div_switch
 
+    method set_window_size p = window_size <- p
     method set_last_mouse_pos p = last_mouse_pos <- p
-      
+
+    method to_model_coord x y model_w model_h =
+      match window_size with 
+      | (w,h) -> (int_of_float(float(x) *. float model_w /. float w)
+                 , model_h - int_of_float(float y *. float model_h /. float h))
+
     method get_fan_state = fan_state
     method get_last_mouse_pos = last_mouse_pos
                     

@@ -13,9 +13,7 @@ let dt = 0.01;;
 
 module Data = Grid.DataGrid(Config);;
 
-let to_model_coord x y =
-  (int_of_float(float(x) *. float Config.width /. float windowWidth)
-  , Config.height - int_of_float(float y *. float Config.height /. float windowHeight));;
+let to_model_coord x y = Data.input#to_model_coord x y Config.width Config.height
 
 let model_coord_to_opengl_coord x y =
   (float x /. float Config.width *. 2.0 -. 1.0 , float y /. float Config.height *. 2.0 -. 1.0)
@@ -122,6 +120,7 @@ let move_forward_in_time () =
   display ()
 
 let reshape ~w ~h =
+  Data.input#set_window_size (w,h);
   GlDraw.viewport ~x:0 ~y:0 ~w ~h;
   GlMat.mode `projection;
   GlMat.load_identity ();
