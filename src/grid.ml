@@ -105,8 +105,8 @@ module DataGrid =
                            vel_y i (j+1) -. vel_y i (j-1))
 
     let color_with_div i j =
-      let div_pos = max 0 (int_of_float (51200.0 *. div i j)) in
-      let div_neg = max 0 (int_of_float (-51200.0 *. div i j)) in
+      let div_pos = max 0 (int_of_float (float C.width *. 400.0 *. div i j)) in
+      let div_neg = max 0 (int_of_float (float C.width *. -400.0 *. div i j)) in
       let d = int_of_float (255.0 *. den i j) in
       [|min 255 (d+div_pos);min 255 (d+div_neg);d|]
       
@@ -178,7 +178,7 @@ module DataGrid =
         then 0.0
         else (div i j +. p (i-1) j +. p (i+1) j +. p i (j-1) +. p i (j+1)) /. 4.0
       in
-      do_times 20
+      do_times 30
         (fun () -> (write_to_array update buffer); set_boundary buffer p 0);
       let result_x i j =
         if boundary i j

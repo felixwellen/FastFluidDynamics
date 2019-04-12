@@ -4,7 +4,7 @@ module Config = struct
   let width = 128
   let height = 128
   let diff = 1.0
-  let visc = 100.0
+  let visc = 1.0
 end;;
 
 let windowWidth = 800;;
@@ -74,9 +74,12 @@ let draw_arrow x y dx dy c thickness eps =
 
 let draw_capped_arrow x y dx dy cap =
   let l = 2.0 *. Math.length2d (dx , dy) in
+  let thickness = max 0.003 (min 0.01 (0.2 *. l)) in
   let (dx , dy) = if l > cap then (cap /. l *. dx , cap /. l *. dy) else (dx , dy) in
-  let c = (0.5 *. l /. cap , max 0.1 (1.0 -. l /. cap) , max 0.1 (1.0 -. l /. cap)) in
-  draw_arrow x y dx dy c 0.01 0.004
+  let c = (min 1.0 (0.5 *. l /. cap)
+          , max 0.3 (min (1.0 -. l /. cap) 0.8)
+          , min (max 0.1 (1.0 -. l /. cap)) 0.4) in
+  draw_arrow x y dx dy c thickness 0.002
   
 let draw_velocity_field () =
   Gl.disable `texture_2d;

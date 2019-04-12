@@ -6,9 +6,8 @@ CONTROLS:
 - d          -- show divergence of velocity field.(red means positive, green negative)
 - left click -- drop something into the fluid.
 
-Something seems still to be off: the velocities don't interact intuitively with each other.
-The goal is, that I learn more ocaml.
-The program is supposed to implement a fast and unprecise Navier-Stokes solver from the paper
+The goal of this project was that I learn how to use ocaml.
+The program is supposed to implement a fast and unprecise 2d-Navier-Stokes solver from the paper
 
 http://www.dgp.toronto.edu/people/stam/reality/Research/pdf/GDC03.pdf
 
