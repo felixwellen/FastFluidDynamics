@@ -1,10 +1,11 @@
 CONTROLS:
 
-- q          -- quit.
-- v          -- show the velocity vector field.
-- s          -- start/stop simulation.
-- d          -- show divergence of velocity field.(red means positive, green negative)
-- left click -- drop something into the fluid.
+- q           -- quit.
+- v           -- show the velocity vector field.
+- s           -- start/stop simulation.
+- d           -- show divergence of velocity field.(red means positive, green negative)
+- left click  -- drop something into the fluid.
+- right click -- set source/target of force acting on the fluid
 
 The goal of this project was that I learn how to use ocaml.
 The program is supposed to implement a fast and unprecise 2d-Navier-Stokes solver from the paper
